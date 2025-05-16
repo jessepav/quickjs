@@ -374,6 +374,9 @@ clean:
 	rm -rf $(OBJDIR)/ *.dSYM/ qjs-debug$(EXE)
 	rm -rf run-test262-debug$(EXE)
 	rm -f run_octane run_sunspider_like
+ifdef CONFIG_SHARED
+	rm -f libquickjs.so.$(SO_VERSION)
+endif
 
 install: all
 	mkdir -p "$(DESTDIR)$(PREFIX)/bin"
