@@ -35,6 +35,8 @@ endif
 #CONFIG_WIN32=y
 # use link time optimization (smaller and faster executables but slower build)
 #CONFIG_LTO=y
+# also build libquickjs as a shared library
+#CONFIG_SHARED=y
 # consider warnings as errors (for development)
 #CONFIG_WERROR=y
 # force 32 bit build on x86_64
@@ -216,6 +218,10 @@ PROGS+=libquickjs.a
 ifdef CONFIG_LTO
 PROGS+=libquickjs.lto.a
 endif
+ifdef CONFIG_SHARED
+SO_VERSION=$(shell sed 's/-/./g' VERSION)
+PROGS+=libquickjs.so.$(SO_VERSION)
+endif
 
 # examples
 ifeq ($(CROSS_PREFIX),)
@@ -307,6 +313,11 @@ endif # CONFIG_LTO
 libquickjs.fuzz.a: $(patsubst %.o, %.fuzz.o, $(QJS_LIB_OBJS))
 	$(AR) rcs $@ $^
 
+ifdef CONFIG_SHARED
+libquickjs.so.$(SO_VERSION): $(patsubst %.o, %.pic.o, $(QJS_LIB_OBJS))
+	$(CC) -shared -Wl,-soname,$@ $(LDFLAGS) -o $@ $^
+endif # CONFIG_SHARED
+
 repl.c: $(QJSC) repl.js
 	$(QJSC) -s -c -o $@ -m repl.js
 
@@ -372,6 +383,10 @@ install: all
 	install -m644 libquickjs.a "$(DESTDIR)$(PREFIX)/lib/quickjs"
 ifdef CONFIG_LTO
 	install -m644 libquickjs.lto.a "$(DESTDIR)$(PREFIX)/lib/quickjs"
+endif
+ifdef CONFIG_SHARED
+	install -Dm755 libquickjs.so.$(SO_VERSION) "$(DESTDIR)$(PREFIX)/lib"
+	ln -s libquickjs.so.$(SO_VERSION) "$(DESTDIR)$(PREFIX)/lib/libquickjs.so"
 endif
 	mkdir -p "$(DESTDIR)$(PREFIX)/include/quickjs"
 	install -m644 quickjs.h quickjs-libc.h "$(DESTDIR)$(PREFIX)/include/quickjs"
