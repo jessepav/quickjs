@@ -30,5 +30,5 @@ run_octane
 run_sunspider_like
 libwinpthread*.dll
 
-libquickjs.so.2025.04.26
+libquickjs.so.*
 tags
